@@ -1,4 +1,5 @@
 from rest_framework.response import Response
+from utils.response import APIResponse   # 导入封装文件
 from rest_framework.views import APIView
 from rest_framework import status
 
@@ -12,16 +13,17 @@ class BookAPIViewV2(APIView):
     def get(self, request, *args, **kwargs):
         book_id = kwargs.get("id")
         if book_id:
-            print(book_id)
             book_obj = Book.objects.get(pk=book_id, is_delete=False)
             print(book_obj, type(book_obj), "1111")
-            book_ser = BookModelSerializerV2(book_obj).data
-            return Response({
-                "status": status.HTTP_200_OK,
-                "message": "查询单个图书成功",
-                "results": book_ser
-            })
-
+            book_ser = BookModelSerializerV2(book_obj,context={"request": request}).data
+            # 原始返回对象
+            # return Response({
+            #     "status": status.HTTP_200_OK,
+            #     "message": "查询单个图书成功",
+            #     "results": book_ser
+            # })
+            # 封装后的对象
+            return APIResponse(status.HTTP_200_OK, "封装的SUCCESS", results=book_ser)
         else:
             book_list = Book.objects.filter(is_delete=False)
             book_list_ser = BookModelSerializerV2(book_list, many=True).data
