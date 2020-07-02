@@ -7,9 +7,10 @@ from rest_framework import generics  # 导入 generics
 from rest_framework import viewsets  # 导入 viewsets
 from rest_framework import status
 
-
+from bookapp.models import User
 from bookapp.models import Book
 from .serializers import BookModelSerializerV2  # 导入整合序列化器
+from .serializers import UserDeSerializer
 
 '''viwes 下的 APIResponse'''
 
@@ -119,17 +120,36 @@ class BookListAPIVIew(generics.ListCreateAPIView, generics.UpdateAPIView):
 
 '''Viewsets 下的 ModelViewSet'''
 
-class BookGenericViewSet(viewsets.ModelViewSet):
-    queryset = Book.objects.filter(is_delete=False)
-    serializer_class = BookModelSerializerV2
-    lookup_field = "id"
+# class BookGenericViewSet(viewsets.ModelViewSet):
+#     queryset = Book.objects.filter(is_delete=False)
+#     serializer_class = BookModelSerializerV2
+#     lookup_field = "id"
+#
+#     # 如何确定post请求是需要登录
+#     def user_login(self, request, *args, **kwargs):
+#         # 可以在此方法中完成用户登录的逻辑
+#         return self.retrieve(request, *args, **kwargs)
+#
+#     def get_user_count(self, request, *args, **kwargs):
+#         return self.list(request, *args, **kwargs)
 
-    # 如何确定post请求是需要登录
-    def user_login(self, request, *args, **kwargs):
-        # 可以在此方法中完成用户登录的逻辑
-        return self.retrieve(request, *args, **kwargs)
+# 登录 注册
+class USERGenericViewSet(viewsets.ModelViewSet):
+    serializer_class = UserDeSerializer
+    def login(self,requset,*args,**kwargs):
+        try:
+            uname = requset.data.get("username")
+            pwd = requset.data.get("password")
+            user = User.objects.get(username=uname,password=pwd)
+            user_m = UserDeSerializer(user).data
+        except:
+            return APIResponse(0,"登录失败")
 
-    def get_user_count(self, request, *args, **kwargs):
-        return self.list(request, *args, **kwargs)
+    def register(self, requset, *args, **kwargs):
+        try:
+            regist = self.create(requset, *args, **kwargs)
+            return APIResponse(1, "注册成功",results=regist.data)
+        except:
+            return APIResponse(0, "注册失败")
 
 
